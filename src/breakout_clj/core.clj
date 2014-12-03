@@ -4,15 +4,6 @@
            (org.lwjgl.opengl Display DisplayMode GL11))
   (:gen-class))
 
-;; (defmacro with-display
-;;   [ setup-display main-loop ]
-;;   `(try
-;;      (Display/setDisplayMode (DisplayMode. 800 600))
-;;      (Display/create)
-;;      (quote ~(setup-display))
-;;      ;;~((main-loop))
-;;      (catch LWJGLException e#
-;;        (str "Caught Exception" (.getMessage e#)) )))
 
 (defn with-display
   [ fn-setup-display fn-main-loop ]
@@ -31,35 +22,48 @@
   (GL11/glOrtho 0 800 0 600 1 -1)
   (GL11/glMatrixMode GL11/GL_MODELVIEW))
 
+
 ;; (defn poll-keyboard-input 
-;;   ([] (poll-keyboard-input []))
-;;   ([ states ]
+;;   ([ state ]
 ;;    (if-not (Keyboard/next)
-;;      states
+;;      state
 ;;      (let [ key (Keyboard/getEventKey)
-;;            pressed-released (if (Keyboard/getEventKeyState) "pressed" "released") 
-;;            key-state (str pressed-released (condp = key
-;;                                              Keyboard/KEY_A  "A"
-;;                                              Keyboard/KEY_S  "S"
-;;                                              (str "Default" key )))]
-;;      (recur (conj states key-state) )))))
+           
+;;            control-info  (:control state) 
+;;            state-currently-pressed ((:pressed-released control-info) :pressed)
 
 
-;; (defn main-loop
-;;   []
-;;   (when-not (Display/isCloseRequested)
-;;     (let [value (poll-keyboard-input)]
-;;       (if (< 0 (count value) )
-;;         (println "---->" value)))
-;;     (Display/update)
-;;     (recur)) )
+;;             new-state state
+;;            ;;  movement (condp = key
+;;            ;;             Keyboard/KEY_A :up
+;;            ;;             Keyboard/KEY_S :down
+;;            ;;             :ignore)
+
+;;            ;;  pressed-released (if (Keyboard/getEventKeyState) 
+;;            ;;                     :pressed
+;;            ;;                     :released)
+           
+;;            ;;  currently-pressed (= (-> state :control :pressed-released) :pressed)
+           
+;;            ;; ;;new-state state
+           
+;;            ;; new-state (if (currently-pressed)
+;;            ;;             (do
+;;            ;;               ;; pressed state
+;;            ;;               state)                         
+;;            ;;             (do
+;;            ;;               ;; released state
+;;            ;;               state)
+;;            ;;             )
+;;            ]
+;;      (recur new-state )))))
 
 
-(defn poll-keyboard-input 
-  ([ state ]
-   (if-not (Keyboard/next)
-     state
-     (let [ key (Keyboard/getEventKey)
+ (defn poll-keyboard-input 
+   ([ state ]
+    (if-not (Keyboard/next)
+      state
+      (let [ key (Keyboard/getEventKey)
            pressed-released (if (Keyboard/getEventKeyState) 
                               :pressed
                               :released) 
@@ -70,39 +74,75 @@
                                                                                                Keyboard/KEY_A  :up
                                                                                                Keyboard/KEY_S  :down
                                                                                                :ignore)})
-                        {})
+                        state)
                        
-           ]
-     (recur new-state )))))
+            ]
+      (recur new-state )))))
+
+
+
+(defn draw-paddle 
+  [ x y ]
+  (GL11/glClear (bit-or GL11/GL_COLOR_BUFFER_BIT GL11/GL_DEPTH_BUFFER_BIT))
+  
+  (GL11/glColor3f 0.5 0.5 1.0)
+  
+  (GL11/glBegin GL11/GL_QUADS)
+   (GL11/glVertex2f x y)
+   (GL11/glVertex2f (+ x 15) y)
+   (GL11/glVertex2f (+ x 15) (+ y 80) )
+   (GL11/glVertex2f x (+ y 80))
+  (GL11/glEnd)
+  )
+
+
+(defn update-players
+  [ state ]
+  (if-let [control (:control state) ]
+    (when-let [ movement (:movement control) ] 
+      (let [ paddle (:paddle state)
+             old-x (-> state :paddle :x)
+             old-y (-> state :paddle :y) 
+             new-paddle (condp = movement 
+                          :up   (assoc paddle :x old-x :y (+ old-y 5))
+                          :down (assoc paddle :x old-x :y (- old-y 5)) 
+                          paddle) ]
+        { :paddle new-paddle }))
+    state))
+
+
+
+(defn apply-callbacks 
+  [ state callbacks ]
+  (if (empty? callbacks) state
+    (let [ callback (first callbacks) 
+           the-other-callbacks (rest callbacks)
+           new-state (callback state)  ]
+      (recur new-state the-other-callbacks))))
 
 (defn make-main-loop 
-  [  callback ]
+  [ & callbacks ]
   (letfn [ (main-loop 
-             ([] (main-loop {}))
+             ([] (main-loop {:paddle {:x 10 :y 10} }))
              ( [ state ] 
                (when-not (Display/isCloseRequested)
-                 (let [ new-state (callback state) ]
+                 (let [ new-state (apply-callbacks state callbacks) ]
                    (when-not (empty? new-state) 
+                     (draw-paddle (-> state :paddle :x) (-> state :paddle :y))
+
                      (println ">-->" new-state))
+
                    (Display/update)
                    (recur new-state)))))
            ]
     main-loop))
 
-;; (defn main-loop
-;;   ([] (main-loop {}))
-;;   ([ state ] 
-;;    (when-not (Display/isCloseRequested)
-
-;;      (Display/update)
-;;      (recur)) )
-;; )
    
 (defn -main
   "I don't do a whole lot ... yet."
   [& args]
   (println "Hello, World!")
-  (let [ main-loop (make-main-loop poll-keyboard-input)]
+  (let [ main-loop (make-main-loop poll-keyboard-input update-players)]
     (println main-loop)
     (with-display
       setup-display main-loop))
