@@ -23,42 +23,6 @@
   (GL11/glMatrixMode GL11/GL_MODELVIEW))
 
 
-;; (defn poll-keyboard-input 
-;;   ([ state ]
-;;    (if-not (Keyboard/next)
-;;      state
-;;      (let [ key (Keyboard/getEventKey)
-           
-;;            control-info  (:control state) 
-;;            state-currently-pressed ((:pressed-released control-info) :pressed)
-
-
-;;             new-state state
-;;            ;;  movement (condp = key
-;;            ;;             Keyboard/KEY_A :up
-;;            ;;             Keyboard/KEY_S :down
-;;            ;;             :ignore)
-
-;;            ;;  pressed-released (if (Keyboard/getEventKeyState) 
-;;            ;;                     :pressed
-;;            ;;                     :released)
-           
-;;            ;;  currently-pressed (= (-> state :control :pressed-released) :pressed)
-           
-;;            ;; ;;new-state state
-           
-;;            ;; new-state (if (currently-pressed)
-;;            ;;             (do
-;;            ;;               ;; pressed state
-;;            ;;               state)                         
-;;            ;;             (do
-;;            ;;               ;; released state
-;;            ;;               state)
-;;            ;;             )
-;;            ]
-;;      (recur new-state )))))
-
-
  (defn poll-keyboard-input 
    ([ state ]
     (if-not (Keyboard/next)
@@ -78,6 +42,27 @@
                        
             ]
       (recur new-state )))))
+
+
+ ;; (defn poll-keyboard-input 
+ ;;   ([ state ]
+ ;;    (if-not (Keyboard/next)
+ ;;      state
+ ;;      (let [ key (Keyboard/getEventKey)
+ ;;           pressed-released (if (Keyboard/getEventKeyState) 
+ ;;                              :pressed
+ ;;                              :released) 
+ ;;           new-state  (if  (or 
+ ;;                            (= key Keyboard/KEY_A)  
+ ;;                            (= key Keyboard/KEY_S)) 
+ ;;                        (assoc state :control { :pressed-released pressed-released :movement (condp = key
+ ;;                                                                                               Keyboard/KEY_A  :up
+ ;;                                                                                               Keyboard/KEY_S  :down
+ ;;                                                                                               :ignore)})
+ ;;                        state)
+                       
+ ;;            ]
+ ;;      (recur new-state )))))
 
 
 
