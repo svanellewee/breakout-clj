@@ -152,9 +152,18 @@
     (do 
       ;;(println "control = " state)
       (if-let [ movement (:movement control) ]
-        (do
-          (println "movement =" movement)
-          state)
+        (let [ paddle (:paddle state)
+               old-x (-> state :paddle :x)
+               old-y (-> state :paddle :y) 
+               new-paddle (condp = movement 
+                            :up   (assoc paddle :x old-x :y (+ old-y 5))
+                            :down (assoc paddle :x old-x :y (- old-y 5)) 
+                            paddle) ]
+          ;;{:paddle new-paddle}  ;; don't keep the direction data...
+          (assoc state :paddle new-paddle)  ;; keep the direction/movement data
+          ;;(println "movement =" movement)
+          ;;state
+          )
         state))
     state))
 
