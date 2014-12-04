@@ -23,47 +23,11 @@
   (GL11/glMatrixMode GL11/GL_MODELVIEW))
 
 
- ;; (defn poll-keyboard-input 
- ;;   ([ state ]
- ;;    (if-not (Keyboard/next) 
- ;;      state
- ;;      (let [ 
- ;;            ;;current-key-state (fn [] (let [ key (Keyboard/getEventKey)  pressed (Keyboard/getEventKeyState) ] (println "NORM checking state") {:key key :pressed? pressed }))
- ;;            current-key-state (fn [] (let [ 
- ;;                                            key (Keyboard/getEventKey)  
-
- ;;                                            pressed (if (Keyboard/getEventKeyState) 
- ;;                                                      :pressed
- ;;                                                      :released)
- 
- ;;                                            movement (condp = key
- ;;                                                       Keyboard/KEY_A  :up
- ;;                                                       Keyboard/KEY_S  :down
- ;;                                                       :ignore)
-
- ;;                                            pressed (Keyboard/getEventKeyState)
-                                       
-                                       
- ;;                                            retval {:movment movement :pressed-released pressed } ]
- ;;                                       (if (not= movement :ignore) 
- ;;                                         retval) ))
- ;;            ]
-        
- ;;        (let [ control-state (current-key-state) ]
- ;;          (println "..!!!" control-state)
- ;;          (if-not control-state
- ;;            state
- ;;            (do 
- ;;              (println "Do something with " control-state)
- ;;              state)))))))
-
-
  (defn poll-keyboard-input 
    ([ state ]
     (if-not (Keyboard/next) 
       state
       (let [ 
-            ;;current-key-state (fn [] (let [ key (Keyboard/getEventKey)  pressed (Keyboard/getEventKeyState) ] (println "NORM checking state") {:key key :pressed? pressed }))
             current-key-state (fn [] (let [ 
                                             key (Keyboard/getEventKey)  
 
@@ -150,7 +114,6 @@
   [ state ] 
   (if-let [ control (:control state)  ]
     (do 
-      ;;(println "control = " state)
       (if-let [ movement (:movement control) ]
         (let [ paddle (:paddle state)
                old-x (-> state :paddle :x)
@@ -159,10 +122,7 @@
                             :up   (assoc paddle :x old-x :y (+ old-y 5))
                             :down (assoc paddle :x old-x :y (- old-y 5)) 
                             paddle) ]
-          ;;{:paddle new-paddle}  ;; don't keep the direction data...
           (assoc state :paddle new-paddle)  ;; keep the direction/movement data
-          ;;(println "movement =" movement)
-          ;;state
           )
         state))
     state))
@@ -184,10 +144,7 @@
                  (let [ new-state (apply-callbacks state callbacks) ]
                    (when-not (empty? new-state) 
                      (draw-paddle (-> state :paddle :x) (-> state :paddle :y))
-
-                     ;;(println ">-->" new-state)
                      )
-
                    (Display/update)
                    (recur new-state)))))
            ]
